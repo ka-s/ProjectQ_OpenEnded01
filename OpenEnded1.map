@@ -1,12 +1,12 @@
 MPLINK 4.37, Linker
-Linker Map File - Created Sat Apr 11 16:31:01 2015
+Linker Map File - Created Sat Apr 11 17:12:37 2015
 
                                  Section Info
                   Section       Type    Address   Location Size(Bytes)
                 ---------  ---------  ---------  ---------  ---------
                    .org_0       code   0x000000    program   0x000000
                    .org_1       code   0x000000    program   0x000002
-                   .org_2       code   0x000004    program   0x00017a
+                   .org_2       code   0x000004    program   0x00016e
 .config_2007_OPENENDED1.O       code   0x002007    program   0x000002
 .config_2008_OPENENDED1.O       code   0x002008    program   0x000002
 
@@ -16,47 +16,44 @@ Linker Map File - Created Sat Apr 11 16:31:01 2015
                                Start         End      
                            ---------   ---------      
                             0x000000    0x000000      
-                            0x000004    0x0000c0      
+                            0x000004    0x0000ba      
                             0x002007    0x002008      
-            192 out of 4360 program addresses used, program memory utilization is 4%
+            186 out of 4360 program addresses used, program memory utilization is 4%
 
 
 
                               Symbols - Sorted by Name
                      Name    Address   Location    Storage File                     
                 ---------  ---------  ---------  --------- ---------                
-                   ADconv   0x000088    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             ADconv_waitA   0x000092    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             ADconv_waitB   0x000096    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   ADconv   0x000082    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             ADconv_waitA   0x00008c    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             ADconv_waitB   0x000090    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                   AccChkX   0x000036    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  AccChkY   0x000040    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  AccChkZ   0x00004a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-               FrameError   0x0000b2    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccX   0x00003d    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccY   0x000047    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccZ   0x000051    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  AccChkZ   0x000042    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+               FrameError   0x0000ac    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 HighAccX   0x00003e    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 HighAccZ   0x00004a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                   LowAccX   0x00003a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  LowAccY   0x000044    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  LowAccZ   0x00004e    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  LowAccZ   0x000046    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                   OSCWAIT   0x000033    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             OverrunError   0x0000b5    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             OverrunError   0x0000af    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                     Reset   0x000000    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             SerialEnable   0x0000a0    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             SerialEnable   0x00009a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                     Start   0x00001e    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                 StartSign   0x000036    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop0   0x00007d    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop1   0x00007f    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop2   0x000081    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop0   0x000077    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop1   0x000079    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop2   0x00007b    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
             TMR1interrupt   0x000010    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   Wait1S   0x00007b    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 WaitLoop   0x000066    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                arraytest   0x00006a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   Wait1S   0x000075    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 WaitLoop   0x000060    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                arraytest   0x000064    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                    intend   0x000015    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                 interrupt   0x000004    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  receive   0x0000a9    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                skiperror   0x0000b0    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 transmit   0x0000b9    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-            transmit_loop   0x0000bb    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  receive   0x0000a3    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                skiperror   0x0000aa    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 transmit   0x0000b3    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+            transmit_loop   0x0000b5    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
 
 
 
@@ -72,28 +69,25 @@ Linker Map File - Created Sat Apr 11 16:31:01 2015
                 StartSign   0x000036    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                   AccChkX   0x000036    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
                   LowAccX   0x00003a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccX   0x00003d    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  AccChkY   0x000040    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  LowAccY   0x000044    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccY   0x000047    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  AccChkZ   0x00004a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  LowAccZ   0x00004e    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 HighAccZ   0x000051    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 WaitLoop   0x000066    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                arraytest   0x00006a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   Wait1S   0x00007b    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop0   0x00007d    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop1   0x00007f    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   TLoop2   0x000081    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                   ADconv   0x000088    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             ADconv_waitA   0x000092    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             ADconv_waitB   0x000096    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             SerialEnable   0x0000a0    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                  receive   0x0000a9    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                skiperror   0x0000b0    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-               FrameError   0x0000b2    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-             OverrunError   0x0000b5    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-                 transmit   0x0000b9    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
-            transmit_loop   0x0000bb    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 HighAccX   0x00003e    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  AccChkZ   0x000042    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  LowAccZ   0x000046    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 HighAccZ   0x00004a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 WaitLoop   0x000060    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                arraytest   0x000064    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   Wait1S   0x000075    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop0   0x000077    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop1   0x000079    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   TLoop2   0x00007b    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                   ADconv   0x000082    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             ADconv_waitA   0x00008c    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             ADconv_waitB   0x000090    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             SerialEnable   0x00009a    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                  receive   0x0000a3    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                skiperror   0x0000aa    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+               FrameError   0x0000ac    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+             OverrunError   0x0000af    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+                 transmit   0x0000b3    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
+            transmit_loop   0x0000b5    program     static E:\MaiCom\MPLABProjects\ProjectQ_OpenEnded01\OpenEnded1.asm
 
 

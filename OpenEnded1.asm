@@ -234,42 +234,31 @@ AccChkX
 	btfsc	ADH, 7 		; 変換結果の上位８ビット(ADH）の最上位ビットを調べる
 	goto	HighAccX 	; 最上位ビットが１ならHighAccXへ飛ぶ
 LowAccX 				; 最上位ビットは０だった
-	bcf		PORTB, 1 	; LEDを消灯する
+	bsf		PORTB, 1 	; 左のLEDを点灯
 	nop 				; １マイクロ秒待つ
-	goto	AccChkY		; 続いてロール回転を測定
+	bcf		PORTB, 4 	; 逆のLEDを消灯
+	goto	AccChkZ		; 続いてロール回転を測定
 HighAccX				; 最上位ビットは１だった
-	bsf		PORTB, 1 	; LEDを点灯する
+	bsf		PORTB, 4 	; 右のLEDを点灯
 	nop 				; １マイクロ秒待つ
-	goto	AccChkY		; 続いてロール回転を測定
+	bcf		PORTB, 1 	; 逆のLEDを消灯
+	goto	AccChkZ		; 続いてロール回転を測定
 ;
-; ロール回転(Y軸)
-AccChkY
-	movlw	D'3'
-	call	ADconv
-	btfsc	ADH, 7
-	goto	HighAccY
-LowAccY
-	bcf		PORTB, 2
-	nop
-	goto	AccChkZ
-HighAccY
-	bsf		PORTB, 2
-	nop
-	goto	AccChkZ
-;
-; ヨー回転(Z軸)
+; ロール回転(Z軸)
 AccChkZ
 	movlw	D'2'
 	call	ADconv
 	btfsc	ADH, 7
 	goto	HighAccZ
 LowAccZ
-	bcf		PORTB, 3
+	bsf		PORTB, 2
 	nop
+	bcf		PORTB, 3
 	goto	AccChkX
 HighAccZ
-	bsf		PORTB, 3
+	bsf		PORTB, 2
 	nop
+	bcf		PORTB, 3
 	goto	AccChkX
 ;
 ; TMR1 タイマーの初期設定を行う
