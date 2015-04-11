@@ -223,17 +223,54 @@ OSCWAIT
 ; --------------------------------
 StartSign
 ;
-; PIC起動を確認するためＬＥＤを１回ずつ点滅させておく
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;  モーションセンサー処理
+; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ;
-	bsf		PORTB, 1	; LED1を点灯する
-	call	Wait1S		; １秒待つ
-	bcf		PORTB, 1	; LED1を消灯する
-	call	Wait1S		; １秒待つ
-	bsf		PORTB, 2	; LED2を点灯する
-	call	Wait1S		; １秒待つ
-	bcf		PORTB, 2	; LED2を消灯する
-	call	Wait1S		; １秒待つ
-
+; ピッチ回転(X軸)
+AccChkX
+	movlw	D'4'		; AN4端子（Ｘ方向加速度）を指定
+	call	ADconv 		; A/D変換により加速度を１０ビットの数値に変換する
+	btfsc	ADH, 7 		; 変換結果の上位８ビット(ADH）の最上位ビットを調べる
+	goto	HighAccX 	; 最上位ビットが１ならHighAccXへ飛ぶ
+LowAccX 				; 最上位ビットは０だった
+	bcf		PORTB, 1 	; LEDを消灯する
+	nop 				; １マイクロ秒待つ
+	goto	AccChkY		; 続いてロール回転を測定
+HighAccX				; 最上位ビットは１だった
+	bsf		PORTB, 1 	; LEDを点灯する
+	nop 				; １マイクロ秒待つ
+	goto	AccChkY		; 続いてロール回転を測定
+;
+; ロール回転(Y軸)
+AccChkY
+	movlw	D'3'
+	call	ADconv
+	btfsc	ADH, 7
+	goto	HighAccY
+LowAccY
+	bcf		PORTB, 2
+	nop
+	goto	AccChkZ
+HighAccY
+	bsf		PORTB, 2
+	nop
+	goto	AccChkZ
+;
+; ヨー回転(Z軸)
+AccChkZ
+	movlw	D'2'
+	call	ADconv
+	btfsc	ADH, 7
+	goto	HighAccZ
+LowAccZ
+	bcf		PORTB, 3
+	nop
+	goto	AccChkX
+HighAccZ
+	bsf		PORTB, 3
+	nop
+	goto	AccChkX
 ;
 ; TMR1 タイマーの初期設定を行う
 ;
