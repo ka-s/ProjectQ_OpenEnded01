@@ -1,0 +1,928 @@
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  1
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00001 ; ================================================================
+                      00002 ;  ProjectQ Computer Interaction Design Class
+                      00003 ;  PIC16LF88-I/P Sample Code
+                      00004 ;
+                      00005 ;  Apr. 2, 2014
+                      00006 ;  Original codes & words by S.C.Matsushita
+                      00007 ; ================================================================
+                      00008         list    p=16f88
+                      00009         include <p16f88.inc>
+                      00001         LIST
+                      00002 ; P16F88.INC  Standard Header File, Version 1.00    Microchip Technology, Inc.
+                      00410         LIST
+2007   3F10           00010         __config        0x2007, 0x3f10
+                      00011 ;
+                      00012 ; コンフィグレーションレジスタ（＃１）　メモリアドレス0x2007
+                      00013 ; コード保護機能オフ、RB6/RB7/RA5/RA6/RA7を一般I/O端子として使用
+                      00014 ; 電源電圧低下リセット機能無効、電源ON時リセットタイミング発生機能有効、
+                      00015 ; WDT（ウォッチドッグタイマー）無効、PIC16F88内蔵RC発振器をクロックとして使用
+                      00016 ;
+2008   3FFC           00017         __config        0x2008, 0x3ffc
+                      00018 ;
+                      00019 ; コンフィグレーションレジスタ（＃２）　メモリアドレス0x2008
+                      00020 ; 緊急用クロック信号源切り替えシステム無効
+                      00021 ; 
+                      00022 ; memory address
+                      00023 ; 0x20 - 0x6f データメモリ（自由利用可：バンク０）
+                      00024 ; 0x70 - 0x7f データメモリ（全バンクよりアクセス可）
+                      00025 ;
+                      00026 ; メモリバンク（PIC16F88では0,1,2,3の４バンク有）
+                      00027 ; ファイルレジスタSTATUSのRP0ビット及びRP1ビットでバンク切り替えを設定
+                      00028 ; RP0 = 0, RP1 = 0 -> バンク０を選択　（デフォルト）
+                      00029 ; RP0 = 1, RP1 = 0 -> バンク１を選択　（特殊機能レジスタを使う場合等に設定）
+                      00030 ; 通常のプログラム動作ではバンク０を選択し、必要な時だけ他のバンクに切り替える
+                      00031 ;　また、バンク１～３に切り替えた場合は、必要な処理が終了した後に必ずバンク０に戻す
+                      00032 ;
+                      00033 ;
+                      00034 ; 割り込みプログラム用データメモリ
+                      00035 ;
+  00000070            00036 WSAVE           equ     0x70            ; Wレジスタ保存用メモリ
+  00000071            00037 STATSAVE        equ     0x71            ; STATUSレジスタ保存用メモリ
+  00000072            00038 PCLATHSAVE      equ     0x72            ; プログラムカウンタ上位ビット保存用メモリ
+  00000073            00039 FSRSAVE         equ     0x73            ; 配列メモリアクセス用レジスタ保存用メモリ
+  00000074            00040 IntFlag         equ     0x74            ; 割り込みが生じたことを記録するレジスタ
+                      00041 ;
+                      00042 ; A/Dコンバータ用データメモリ
+                      00043 ;
+  00000075            00044 AD_Timer        equ     0x75 ; A/D変換用ワークエリア
+  00000076            00045 AD_temp         equ     0x76 ; A/D変換用ワークエリア
+  00000077            00046 ADL                     equ     0x77 ;　A/D変換結果・下位２ビット（左詰め）
+  00000078            00047 ADH                     equ     0x78 ; A/D変換結果・上位８ビット
+                      00048 ;
+                      00049 ; A/D変換の有効精度は１０ビットなので、８ビットのレジスタ２つ（ADH:ADL）を使う際には
+                      00050 ; 6ビット分が空白になる。ここでは「左詰め：left-justified」とすることで、ADHに
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  2
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00051 ;　上位８ビット分を、ADLには下位２ビット分を格納し、ADLのLSBから６ビット分の範囲には
+                      00052 ; ゼロが書き込まれる仕様となっている。
+                      00053 ;
+                      00054 ; ソフトウエアタイマー用ワークエリア
+                      00055 ;
+  00000079            00056 Var1            equ     0x79
+  0000007A            00057 Var2            equ 0x7a
+  0000007B            00058 Var3            equ     0x7b
+                      00059 ;
+                      00060 ; ハードウエアシリアル通信ポート用ワークエリア
+                      00061 ;
+  0000007C            00062 RXBuf           equ     0x7c
+  0000007D            00063 TXBuf           equ 0x7d
+                      00064 ;
+                      00065 ; ハードウエアシリアル通信ポート用通信速度設定値
+                      00066 ;
+  00000019            00067 Baud_096        equ D'25'               ; 9600ビット毎秒（bps）にする際の設定値
+  0000000C            00068 Baud_192        equ     D'12'           ; 19200bpsにする際の設定値
+                      00069 ;
+                      00070 ; 自由利用可・データメモリ（x0 ～　x9）
+                      00071 ;
+  00000020            00072 x0                      equ 0x20
+  00000021            00073 x1                      equ 0x21
+  00000022            00074 x2                      equ 0x22
+  00000023            00075 x3                      equ 0x23
+  00000024            00076 x4                      equ 0x24
+  00000025            00077 x5                      equ 0x25
+  00000026            00078 x6                      equ     0x26
+  00000027            00079 x7                      equ 0x27
+  00000028            00080 x8                      equ 0x28
+  00000029            00081 x9                      equ 0x29
+                      00082 ;
+                      00083 ;必要であれば、この先0x2a～0x6fの範囲で、適当に変数を宣言しても良い
+                      00084 ;
+                      00085 ; 配列型データを扱うためのデータメモリ領域
+  00000050            00086 array           equ 0x50        ; 配列の開始アドレスを宣言している
+                      00087 ; 0x6fまでメモリを使用できるので、0x50-0x6fの32バイトが配列データとして使用できる
+                      00088 
+0000                  00089         org     0x00                    ; 電源ON（リセット）では、ここから処理が始まる
+0000                  00090 Reset
+                      00091 ;       call    arraytest       ; 配列データアクセスのサンプルコードへ
+0000   281E           00092         goto    Start           ; 通常プログラムの先頭へ飛ぶ
+                      00093 
+0004                  00094         org     0x04                    ; 割り込みが発生すると、ここから処理が始まる
+0004                  00095 interrupt
+0004   00F0           00096         movwf   WSAVE           ; Wレジスタを最初に保存する
+0005   0E03           00097         swapf   STATUS, 0       ; STATUSレジスタの値がWレジスタに入る
+0006   0183           00098         clrf    STATUS          ; データメモリバンクを０にセットする
+0007   00F1           00099         movwf   STATSAVE        ; 割り込み直前のSTATUSレジスタの値を保存する
+0008   080A           00100         movf    PCLATH, 0       ; プログラムカウンタの上位ビット（８ビット）をWレジスタに転送
+0009   00F2           00101         movwf   PCLATHSAVE      ; プログラムカウンタの上位ビットを保存する
+000A   018A           00102         clrf    PCLATH          ; 割り込みプログラムはメモリの最上位付近に必ず置かれている
+000B   0804           00103         movf    FSR, 0          ; 配列データアクセス用ポインタの値をWレジスタに入れる
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  3
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+000C   00F3           00104         movwf   FSRSAVE         ; FSRポインタの値を保存する
+                      00105 
+000D   190C           00106         btfsc   PIR1, CCP1IF    ; 割り込み原因がCCP1（タイマが設定値に到達）であるかチェック
+000E   2810           00107         goto    TMR1interrupt   ; CCP1が原因で割り込みが発生した
+                      00108 
+                      00109 ; CCP1IFではない原因で割り込みが起きた場合に処理されるプログラムをここに書く
+                      00110 ; 例えば、INTF(RB0/INT割り込み)が原因として特定できるのであれば、
+                      00111 ;       bcf             INTCON, INTF
+                      00112 ; として、INTFをクリアする：クリアしないと永遠に割り込み続ける
+                      00113 
+000F   2815           00114         goto    intend          ; 割り込みプログラムから通常プログラムへの復帰処理を行う
+                      00115 
+0010                  00116 TMR1interrupt
+0010   110C           00117         bcf             PIR1, CCP1IF    ; CCP1IF　タイマ割り込みフラグを０にする
+                      00118 
+0011   3002           00119         movlw   B'00000010'     ; ビット１だけが１になっているデータ
+0012   0686           00120         xorwf   PORTB, 1        ; RB1の値が1/0反転する -> LEDの点灯／消灯が逆転する
+                      00121 
+0013   30FF           00122         movlw   0xff
+0014   00F4           00123         movwf   IntFlag         ; 変数IntFlagに0xffを代入し、割り込み発生を伝える
+                      00124 
+0015                  00125 intend                                  ; 保存しておいた割り込み直前のレジスタの値を元に戻す
+0015   0873           00126         movf    FSRSAVE, 0
+0016   0084           00127         movwf   FSR                     ; FSRレジスタを復帰
+0017   0872           00128         movf    PCLATHSAVE, 0
+0018   008A           00129         movwf   PCLATH          ; PCLATHレジスタを復帰
+0019   0E71           00130         swapf   STATSAVE, 0
+001A   0083           00131         movwf   STATUS          ; STATUSレジスタを復帰
+001B   0EF0           00132         swapf   WSAVE, 1
+001C   0E70           00133         swapf   WSAVE, 0        ; Wレジスタを復帰
+001D   0009           00134         retfie                          ; retfieで、割り込みが発生した時点のプログラム実行位置に戻る
+                      00135 ;
+                      00136 ; --------------------------------
+                      00137 ;  通常プログラム
+                      00138 ; --------------------------------
+001E                  00139 Start
+                      00140 ;
+001E   1683           00141         bsf     STATUS, RP0             ; データメモリバンク１番を選択
+                      00142 ;
+                      00143 ;               TRISA, TRISB 信号方向設定               0 -> 出力       1 ->　入力
+                      00144 ;
+                      00145 ; PORTA 入出力方向設定
+                      00146 ;
+001F   30BC           00147         movlw   B'10111100'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0020   0085           00148         movwf   TRISA           
+                      00149                                         ; RA0 for 出力 (未使用)
+                      00150                                         ; RA1 for 出力 (未使用)
+                      00151                                         ; RA2 for 入力 (A/Dコンバータ 加速度Z軸)
+                      00152                                         ; RA3 for　入力 (A/Dコンバータ　加速度ｙ軸)
+                      00153                                         ; RA4 for 入力 (A/Dコンバータ　加速度ｘ軸)
+                      00154                                         ; RA5 for 入力（専用） (未使用)
+                      00155                                         ; RA6 for 出力（専用）　(未使用)
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  4
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00156                                         ; RA7 for 入力(専用)　(未使用)
+                      00157 
+                      00158 ;RA5, RA6, RA7の入出力方向は、初期設定値から変更できない
+                      00159 
+                      00160 ;
+                      00161 ; PORTB 入出力方向設定
+                      00162 ;
+0021   3001           00163         movlw   B'00000001'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0022   0086           00164         movwf   TRISB
+                      00165                                         ; RB0 for 入力 (押しボタンスイッチ)
+                      00166                                         ; RB1 for 出力　(LED1)
+                      00167                                         ; RB2 for 出力 (LED2)
+                      00168                                         ; RB3 for 出力　(LED3)
+                      00169                                         ; RB4 for 出力　(LED4)
+                      00170                                         ; RB5 for 出力　(未使用)
+                      00171                                         ; RB6 for 出力 (未使用)
+                      00172                                         ; RB7 for 出力　(未使用)
+                      00173 ;
+                      00174 ; Option Register　(割り込みピン機能設定等)
+                      00175 ;
+0023   3087           00176         movlw   B'10000111'     ; RB0/INTピン、1->0変化にてINT割り込みを検出
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0024   0081           00177         movwf   OPTION_REG
+                      00178 ; 
+                      00179 
+0025   1283           00180         bcf             STATUS, RP0     ; データメモリバンク０番を選択
+                      00181 ;
+                      00182 ; PORTA & PORTB 初期値設定
+                      00183 ;
+0026   3000           00184         movlw   B'00000000'
+0027   0085           00185         movwf   PORTA
+0028   3001           00186         movlw   B'00000001'     ; RB0 = 1 (押しボタンスイッチ・オフ）
+0029   0086           00187         movwf   PORTB
+                      00188 ;
+                      00189 ; A/Dコンバータ　初期設定
+                      00190 ;
+002A   1683           00191         bsf             STATUS, RP0     ; データメモリバンク１番を選択
+002B   3000           00192         movlw   B'00000000'     ; データ形式等の設定を行う
+                      00193 ;
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002C   009F           00194         movwf   ADCON1          ; ADCON1レジスタに設定値を書き込む
+                      00195 
+002D   301C           00196         movlw   B'00011100'     ; AN2,AN3,AN4ピンをアナログ入力に設定
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+002E   009B           00197         movwf   ANSEL
+002F   1283           00198         bcf             STATUS, RP0 ; データメモリバンク０番を選択
+                      00199 ;
+                      00200 ; PIC16F88内蔵クロック信号発生器の設定
+                      00201 ;
+0030   1683           00202         bsf             STATUS, RP0     ; データメモリバンク１番を選択
+0031   3060           00203         movlw   B'01100000'     ; クロック周波数を4MHzに設定
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  5
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+0032   008F           00204         movwf   OSCCON
+                      00205 ;
+                      00206 ; 内蔵クロック信号発生器の周波数微調整
+                      00207 ; （時間精度が必要な場合に使用する）
+                      00208 ;
+                      00209 ;       movlw   B'00xxxxxx'     ; 微調整値を下位６ビットで指定
+                      00210 ;                                               ; 000000 = 中心値：デフォルト
+                      00211 ;                                               ; 000001 周波数１ステップアップ
+                      00212 ;                                               ; 111111 周波数１ステップダウン
+                      00213 ;       movwf   OSCTUNE         ; 微調整用ファイルレジスタ
+                      00214 ;
+                      00215 
+0033                  00216 OSCWAIT
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0033   1D0F           00217         btfss   OSCCON, IOFS
+0034   2833           00218         goto    OSCWAIT         ; クロック信号発生器が安定するまで待つ
+0035   1283           00219         bcf             STATUS, RP0     ; データメモリバンク０番を選択
+                      00220 ;
+                      00221 ; --------------------------------
+                      00222 ;  メイン部分
+                      00223 ; --------------------------------
+0036                  00224 StartSign
+                      00225 ;
+                      00226 ; PIC起動を確認するためＬＥＤを１回ずつ点滅させておく
+                      00227 ;
+0036   1486           00228         bsf             PORTB, 1        ; LED1を点灯する
+0037   2065           00229         call    Wait1S          ; １秒待つ
+0038   1086           00230         bcf             PORTB, 1        ; LED1を消灯する
+0039   2065           00231         call    Wait1S          ; １秒待つ
+003A   1506           00232         bsf             PORTB, 2        ; LED2を点灯する
+003B   2065           00233         call    Wait1S          ; １秒待つ
+003C   1106           00234         bcf             PORTB, 2        ; LED2を消灯する
+003D   2065           00235         call    Wait1S          ; １秒待つ
+                      00236 
+                      00237 ;
+                      00238 ; TMR1 タイマーの初期設定を行う
+                      00239 ;
+                      00240 ; T1CON コントロールレジスタの構成
+                      00241 ; b7 b6 b5 b4 b3 b2 b1 b0 の順
+                      00242 ;
+                      00243 ; b5-b4 Prescaler select bits 11=1:8, 10=1:4, 01=1:2, 00=1:1
+                      00244 ; b5とb4の２ビットでプリスケーラの減速比を決める
+                      00245 ; b0 TMR1ON Timer1 On bit (1 ... enables TMR1, 0 ... stops TMR1)
+                      00246 ; b0が１になるとタイマー１が起動しカウントが始まる（０だとカウントが止まる）
+                      00247 ;
+003E   018F           00248         clrf    TMR1H           ; タイマーレジスタの上位８ビットを０にリセット
+003F   018E           00249         clrf    TMR1L           ; タイマーレジスタの下位８ビットを０にリセット
+0040   3034           00250         movlw   B'00110100'     ; タイマーの初期設定値 (上記レジスタ設定値を参照）
+                      00251                                                 ; プリスケーラ（減速器）が1:8（8分周）に設定されている
+                      00252 ;       movlw   B'                      ; プリスケーラの設定を1:1に設定するには、この値を用いる
+0041   0090           00253         movwf   T1CON
+                      00254 ;
+                      00255 ; タイマーレジスタの上限値（この値に達するとTMR1H, TMR1Lが０に戻る）を設定する
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  6
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00256 ;
+                      00257 ; 0xf424 = 62,500　が設定値だが、プリスケーラが1:8に設定されているため
+                      00258 ; 62,500 x 8usec = 500,000usec = 0.5sec が設定時間となる
+                      00259 ;
+0042   30F4           00260         movlw   0xf4
+0043   0096           00261         movwf   CCPR1H          ; TMR1Hと比較する値
+0044   3024           00262         movlw   0x24
+0045   0095           00263         movwf   CCPR1L          ; TMR1Lと比較する値
+                      00264 ;
+0046   300B           00265         movlw   B'00001011'     ;　タイマーレジスタの上限値判定機能を有効化する
+0047   0097           00266         movwf   CCP1CON
+                      00267 ;
+                      00268 ;       タイマー割り込みの設定を行う
+                      00269 ;
+0048   110C           00270         bcf             PIR1, CCP1IF    ;　タイマー割り込みフラグをリセットする
+                      00271 ;
+                      00272 ; RB0/INTピンにて割り込みを使用する場合は、
+                      00273 ;       bcf             INTCON, INTF    ; RB0/INT割り込みフラグをリセットする
+                      00274 ;       bsf             INTCON, INTE    ; RB0/INT割り込みを許可する
+                      00275 ; を追加する
+                      00276 
+0049   170B           00277         bsf             INTCON, PEIE    ;　PE(Peripheral)割り込みを許可する
+                      00278 ;
+004A   1683           00279         bsf             STATUS, RP0             ; データメモリバンク１番を選択
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+004B   150C           00280         bsf             PIE1, CCP1IE    ; CCP1IE（タイマー上限値到達）割り込みを許可する
+004C   1283           00281         bcf             STATUS, RP0             ; データメモリバンク０番を選択
+                      00282 
+004D   01F4           00283         clrf    IntFlag                 ; 割り込みが起きたことを記録するデータメモリをクリア
+004E   178B           00284         bsf             INTCON, GIE             ; 全割り込み機能を有効化する
+004F   1410           00285         bsf             T1CON, TMR1ON   ; TMR1カウント開始
+                      00286 
+                      00287 ;
+0050                  00288 WaitLoop
+0050   1C74           00289         btfss   IntFlag, 0              ; 割り込みが起きない限り待ち続ける
+0051   2850           00290         goto    WaitLoop
+                      00291 
+0052   01F4           00292         clrf    IntFlag                 ; 割り込みが起きたことを示すデータメモリをクリア
+                      00293 
+                      00294 ; タイマー割り込みが起きた時に実行すべきプログラムをここに書く
+                      00295 
+0053   2850           00296         goto    WaitLoop                ; 次の割り込みを待つ
+                      00297 
+                      00298 ;
+                      00299 ; 配列型変数にアクセスする際のサンプルコード
+                      00300 ;
+0054                  00301 arraytest
+                      00302 ;
+0054   3050           00303         movlw   array                   ; arrayのアドレス（８ビット）をｗに読み込む
+0055   0084           00304         movwf   FSR                             ; FSRレジスタ（Cでいうポインタ）に書き込む
+                      00305 
+0056   3012           00306         movlw   0x12
+0057   0080           00307         movwf   INDF                    ; INDFに書き込むと，FSRで指示されている
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  7
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00308                                                         ; メモリにデータが書き込まれる
+0058   0A84           00309         incf    FSR, 1                  ; ポインタを１つ進める
+0059   3034           00310         movlw   0x34
+005A   0080           00311         movwf   INDF                    ; 今度はarray+1番地に書き込まれる
+                      00312 
+005B   3050           00313         movlw   array
+005C   0084           00314         movwf   FSR                             ; FSRを初期値に戻す
+                      00315 
+005D   0800           00316         movf    INDF, 0                 ; INDFを読み出すと，FSRで指示されている
+                      00317                                                         ; メモリからデータが読み出される
+005E   00A0           00318         movwf   x0                              ; データメモリx0（アドレス0x20）に書き出してみる
+                      00319 
+005F   3051           00320         movlw   array+1                 ; こういうこともできる
+0060   0084           00321         movwf   FSR
+                      00322 
+0061   0800           00323         movf    INDF, 0
+0062   00A1           00324         movwf   x1                              ; データメモリx1(アドレス0x21)に書き出してみる
+                      00325 
+0063   0000           00326         nop
+                      00327 
+0064   0008           00328         return
+                      00329 ;
+                      00330 ; --------------------------------
+                      00331 ;　 ここから以降はcall命令によって呼び出すサブルーチン（関数）
+                      00332 ; --------------------------------
+                      00333 
+                      00334 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                      00335 ;  Wait1S
+                      00336 ;
+                      00337 ;  １秒待つ（クロック周波数＝４ＭＨｚのとき）
+                      00338 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+0065                  00339 Wait1S
+0065   3011           00340         movlw   0x11
+0066   00F9           00341         movwf   Var1
+0067                  00342 TLoop0
+0067   3088           00343         movlw   0x88
+0068   00FA           00344         movwf   Var2
+0069                  00345 TLoop1
+0069   308F           00346         movlw   0x8f
+006A   00FB           00347         movwf   Var3
+006B                  00348 TLoop2
+006B   0BFB           00349         decfsz  Var3, 1
+006C   286B           00350         goto    TLoop2
+006D   0BFA           00351         decfsz  Var2, 1
+006E   2869           00352         goto    TLoop1
+006F   0BF9           00353         decfsz  Var1, 1
+0070   2867           00354         goto    TLoop0
+0071   0008           00355         return
+                      00356 ;
+                      00357 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                      00358 ;  ADconv
+                      00359 ;
+                      00360 ;  A/D変換を行う（１回につき、１つの入力ピンを処理）
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  8
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+                      00361 ;
+                      00362 ;  input                ＷレジスタでA/D変換入力ピンの番号（0から7まで）を指定する
+                      00363 ;  output       ADH　A/D変換結果の上位８ビット
+                      00364 ;                       ADL A/D変換結果の下位２ビット（MSB2ビットに数値が入り、残りは0となる）
+                      00365 ; ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+0072                  00366 ADconv
+0072   3907           00367         andlw   B'00000111'     ; 下位３ビット（チャンネル番号）を抽出する
+0073   00F6           00368         movwf   AD_temp
+0074   1003           00369         bcf             STATUS, C
+0075   0DF6           00370         rlf             AD_temp, 1
+0076   0DF6           00371         rlf             AD_temp, 1
+0077   0D76           00372         rlf             AD_temp, 0
+0078   3841           00373         iorlw   B'01000001'     
+0079   009F           00374         movwf   ADCON0          ; A/D変換器にチャンネル情報等を伝える
+                      00375 
+007A   3005           00376         movlw   D'5'
+007B   00F5           00377         movwf   AD_Timer
+007C                  00378 ADconv_waitA                    ; 約１５マイクロ秒待ってA/D変換器のコンデンサを充電
+007C   0BF5           00379         decfsz  AD_Timer, 1
+007D   287C           00380         goto    ADconv_waitA
+                      00381 
+007E   130C           00382         bcf             PIR1, ADIF
+007F   151F           00383         bsf             ADCON0, GO      ; コンデンサにたまった電荷を数値に変換する
+0080                  00384 ADconv_waitB
+0080   1F0C           00385         btfss   PIR1, ADIF      ; 数値変換の終了を待つ
+0081   2880           00386         goto    ADconv_waitB
+0082   130C           00387         bcf             PIR1, ADIF
+                      00388 
+0083   081E           00389         movf    ADRESH, 0       ; 変換結果の上位８ビットをADHに入れる
+0084   00F8           00390         movwf   ADH
+                      00391 
+0085   1683           00392         bsf             STATUS, RP0     ; select bank1
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0086   081E           00393         movf    ADRESL, 0
+0087   1283           00394         bcf             STATUS, RP0     ; select bank0
+0088   00F7           00395         movwf   ADL                     ; 変換結果の下位８ビット（ただし６ビット分はゼロ）を
+                      00396                                                 ; ADLに入れる　：　B'xx000000'が入る
+0089   0008           00397         return
+                      00398 ;
+                      00399 ; SerialEnable
+                      00400 ;
+                      00401 ; ハードウエアシリアル通信ポートの機能を有効化する
+                      00402 ;
+                      00403 ; input なし
+                      00404 ; output なし
+                      00405 ; 使用条件　クロック周波数４ＭＨｚ、TXDピン（RB5ピン）及びRXDピン（RB2ピン）を
+                      00406 ; それぞれ送信ピン、受信ピンとして通信回線に接続
+                      00407 ;
+008A                  00408 SerialEnable
+                      00409 ;
+008A   3090           00410         movlw   B'10010000'
+008B   0098           00411         movwf   RCSTA
+                      00412 ;
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE  9
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+008C   1683           00413         bsf             STATUS, RP0     ; データメモリバンク１番を選択
+008D   3024           00414         movlw   B'00100100'
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+008E   0098           00415         movwf   TXSTA
+008F   3019           00416         movlw   Baud_096        ; 9600bpsを設定
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+0090   0099           00417         movwf   SPBRG
+0091   1283           00418         bcf             STATUS, RP0     ; データメモリバンクを０番に戻す
+                      00419 ;
+0092   0008           00420         return
+                      00421 ;
+                      00422 ; receive
+                      00423 ;
+                      00424 ; ハードウエアシリアルポートから受信データを１バイト読み込む
+                      00425 ;
+                      00426 ; input         なし
+                      00427 ; output        RXBuf（ファイルレジスタ）に受信データが入る
+                      00428 ; データが受信されるまで永遠に待つ仕様となっている点に注意
+                      00429 ;
+0093                  00430 receive
+0093   1E8C           00431         btfss   PIR1, RCIF
+0094   2893           00432         goto    receive         ; データが受信されるまで待つ
+                      00433 
+0095   1918           00434         btfsc   RCSTA, FERR ; フレームエラーの検出
+0096   289C           00435         goto    FrameError
+0097   1898           00436         btfsc   RCSTA, OERR ; オーバーランエラーの検出
+0098   289F           00437         goto    OverrunError
+0099   081A           00438         movf    RCREG, 0
+009A                  00439 skiperror
+009A   00FC           00440         movwf   RXBuf
+009B   0008           00441         return                          ; RXBufに結果を入れてリターン
+009C                  00442 FrameError
+009C   081A           00443         movf    RCREG, 0        ; エラーフラグをクリアするためのコード
+009D   30AA           00444         movlw   0xaa            ; エラー種別を示すデータ
+009E   289A           00445         goto    skiperror
+009F                  00446 OverrunError
+009F   1218           00447         bcf             RCSTA, CREN
+00A0   1618           00448         bsf             RCSTA, CREN
+00A1   30BB           00449         movlw   0xbb            ; エラー種別を示すデータ
+00A2   289A           00450         goto    skiperror
+                      00451 ;
+                      00452 ; transmit
+                      00453 ;
+                      00454 ; ハードウエアシリアルポートから１バイト送信する
+                      00455 ;
+                      00456 ; input         wレジスタの値
+                      00457 ; output        nothing
+                      00458 ;
+00A3                  00459 transmit
+00A3   00FD           00460         movwf   TXBuf           ; 一旦wレジスタの値を保存
+00A4   1683           00461         bsf             STATUS, RP0 ; データメモリバンク１番を選択
+00A5                  00462 transmit_loop
+Message[302]: Register in operand not in bank 0.  Ensure that bank bits are correct.
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 10
+
+
+LOC  OBJECT CODE     LINE SOURCE TEXT
+  VALUE
+
+00A5   1C98           00463         btfss   TXSTA, TRMT ; データ送信準備ＯＫ？
+00A6   28A5           00464         goto    transmit_loop   ; 次のデータを送信できる状態になるまで待つ
+                      00465 
+00A7   1283           00466         bcf             STATUS, RP0 ; データメモリバンクを０番に戻す
+00A8   087D           00467         movf    TXBuf, 0        ; 送信データをwレジスタに入れる
+00A9   0099           00468         movwf   TXREG           ; この時点でデータ送信が開始される
+                      00469                                                 ; データ送信が完了する前にreturnする
+00AA   0008           00470         return
+                      00471 ;
+                      00472         end
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 11
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+ADCON0                            0000001F
+ADCON1                            0000009F
+ADCS0                             00000006
+ADCS1                             00000007
+ADCS2                             00000006
+ADDEN                             00000003
+ADFM                              00000007
+ADH                               00000078
+ADIE                              00000006
+ADIF                              00000006
+ADL                               00000077
+ADON                              00000000
+ADRESH                            0000001E
+ADRESL                            0000009E
+AD_Timer                          00000075
+AD_temp                           00000076
+ADconv                            00000072
+ADconv_waitA                      0000007C
+ADconv_waitB                      00000080
+ANS0                              00000000
+ANS1                              00000001
+ANS2                              00000002
+ANS3                              00000003
+ANS4                              00000004
+ANS5                              00000005
+ANS6                              00000006
+ANSEL                             0000009B
+BF                                00000000
+BRGH                              00000002
+Baud_096                          00000019
+Baud_192                          0000000C
+C                                 00000000
+C1INV                             00000004
+C1OUT                             00000006
+C2INV                             00000005
+C2OUT                             00000007
+CCP1CON                           00000017
+CCP1IE                            00000002
+CCP1IF                            00000002
+CCP1M0                            00000000
+CCP1M1                            00000001
+CCP1M2                            00000002
+CCP1M3                            00000003
+CCP1X                             00000005
+CCP1Y                             00000004
+CCPR1H                            00000016
+CCPR1L                            00000015
+CHS0                              00000003
+CHS1                              00000004
+CHS2                              00000005
+CIS                               00000003
+CKE                               00000006
+CKP                               00000004
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 12
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+CM0                               00000000
+CM1                               00000001
+CM2                               00000002
+CMCON                             0000009C
+CMIE                              00000006
+CMIF                              00000006
+CREN                              00000004
+CSRC                              00000007
+CVR0                              00000000
+CVR1                              00000001
+CVR2                              00000002
+CVR3                              00000003
+CVRCON                            0000009D
+CVREN                             00000007
+CVROE                             00000006
+CVRR                              00000005
+D                                 00000005
+DATA_ADDRESS                      00000005
+DC                                00000001
+D_A                               00000005
+EEADR                             0000010D
+EEADRH                            0000010F
+EECON1                            0000018C
+EECON2                            0000018D
+EEDATA                            0000010C
+EEDATH                            0000010E
+EEIE                              00000004
+EEIF                              00000004
+EEPGD                             00000007
+F                                 00000001
+FERR                              00000002
+FREE                              00000004
+FSR                               00000004
+FSRSAVE                           00000073
+FrameError                        0000009C
+GIE                               00000007
+GO                                00000002
+GO_DONE                           00000002
+I2C_DATA                          00000005
+I2C_READ                          00000002
+I2C_START                         00000003
+I2C_STOP                          00000004
+INDF                              00000000
+INTCON                            0000000B
+INTE                              00000004
+INTEDG                            00000006
+INTF                              00000001
+IOFS                              00000002
+IRCF0                             00000004
+IRCF1                             00000005
+IRCF2                             00000006
+IRP                               00000007
+IntFlag                           00000074
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 13
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+NOT_A                             00000005
+NOT_ADDRESS                       00000005
+NOT_BO                            00000000
+NOT_BOR                           00000000
+NOT_DONE                          00000002
+NOT_PD                            00000003
+NOT_POR                           00000001
+NOT_RBPU                          00000007
+NOT_RC8                           00000006
+NOT_T1SYNC                        00000002
+NOT_TO                            00000004
+NOT_TX8                           00000006
+NOT_W                             00000002
+NOT_WRITE                         00000002
+OERR                              00000001
+OPTION_REG                        00000081
+OSCCON                            0000008F
+OSCTUNE                           00000090
+OSCWAIT                           00000033
+OSFIE                             00000007
+OSFIF                             00000007
+OSTS                              00000003
+OverrunError                      0000009F
+P                                 00000004
+PCL                               00000002
+PCLATH                            0000000A
+PCLATHSAVE                        00000072
+PCON                              0000008E
+PEIE                              00000006
+PIE1                              0000008C
+PIE2                              0000008D
+PIR1                              0000000C
+PIR2                              0000000D
+PORTA                             00000005
+PORTB                             00000006
+PR2                               00000092
+PS0                               00000000
+PS1                               00000001
+PS2                               00000002
+PSA                               00000003
+R                                 00000002
+RBIE                              00000003
+RBIF                              00000000
+RC8_9                             00000006
+RC9                               00000006
+RCD8                              00000000
+RCIE                              00000005
+RCIF                              00000005
+RCREG                             0000001A
+RCSTA                             00000018
+RD                                00000000
+READ_WRITE                        00000002
+RP0                               00000005
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 14
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+RP1                               00000006
+RX9                               00000006
+RX9D                              00000000
+RXBuf                             0000007C
+R_W                               00000002
+Reset                             00000000
+S                                 00000003
+SCS0                              00000000
+SCS1                              00000001
+SMP                               00000007
+SPBRG                             00000099
+SPEN                              00000007
+SREN                              00000005
+SSPADD                            00000093
+SSPBUF                            00000013
+SSPCON                            00000014
+SSPEN                             00000005
+SSPIE                             00000003
+SSPIF                             00000003
+SSPM0                             00000000
+SSPM1                             00000001
+SSPM2                             00000002
+SSPM3                             00000003
+SSPOV                             00000006
+SSPSTAT                           00000094
+STATSAVE                          00000071
+STATUS                            00000003
+SWDTE                             00000000
+SWDTEN                            00000000
+SYNC                              00000004
+SerialEnable                      0000008A
+Start                             0000001E
+StartSign                         00000036
+T0CS                              00000005
+T0SE                              00000004
+T1CKPS0                           00000004
+T1CKPS1                           00000005
+T1CON                             00000010
+T1INSYNC                          00000002
+T1OSCEN                           00000003
+T1RUN                             00000006
+T2CKPS0                           00000000
+T2CKPS1                           00000001
+T2CON                             00000012
+TLoop0                            00000067
+TLoop1                            00000069
+TLoop2                            0000006B
+TMR0                              00000001
+TMR0IE                            00000005
+TMR0IF                            00000002
+TMR1CS                            00000001
+TMR1H                             0000000F
+TMR1IE                            00000000
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 15
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+TMR1IF                            00000000
+TMR1L                             0000000E
+TMR1ON                            00000000
+TMR1interrupt                     00000010
+TMR2                              00000011
+TMR2IE                            00000001
+TMR2IF                            00000001
+TMR2ON                            00000002
+TOUTPS0                           00000003
+TOUTPS1                           00000004
+TOUTPS2                           00000005
+TOUTPS3                           00000006
+TRISA                             00000085
+TRISB                             00000086
+TRMT                              00000001
+TUN0                              00000000
+TUN1                              00000001
+TUN2                              00000002
+TUN3                              00000003
+TUN4                              00000004
+TUN5                              00000005
+TX8_9                             00000006
+TX9                               00000006
+TX9D                              00000000
+TXBuf                             0000007D
+TXD8                              00000000
+TXEN                              00000005
+TXIE                              00000004
+TXIF                              00000004
+TXREG                             00000019
+TXSTA                             00000098
+UA                                00000001
+VCFG0                             00000004
+VCFG1                             00000005
+Var1                              00000079
+Var2                              0000007A
+Var3                              0000007B
+W                                 00000000
+WCOL                              00000007
+WDTCON                            00000105
+WDTPS0                            00000001
+WDTPS1                            00000002
+WDTPS2                            00000003
+WDTPS3                            00000004
+WR                                00000001
+WREN                              00000002
+WRERR                             00000003
+WSAVE                             00000070
+Wait1S                            00000065
+WaitLoop                          00000050
+Z                                 00000002
+_BODEN_OFF                        00003FBF
+_BODEN_ON                         00003FFF
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 16
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+_CCP1_RB0                         00003FFF
+_CCP1_RB3                         00002FFF
+_CONFIG1                          00002007
+_CONFIG2                          00002008
+_CPD_OFF                          00003FFF
+_CPD_ON                           00003EFF
+_CP_ALL                           00001FFF
+_CP_OFF                           00003FFF
+_DEBUG_OFF                        00003FFF
+_DEBUG_ON                         000037FF
+_EXTCLK                           00003FEF
+_EXTRC_CLKOUT                     00003FFF
+_EXTRC_IO                         00003FFE
+_FCMEN_OFF                        00003FFE
+_FCMEN_ON                         00003FFF
+_HS_OSC                           00003FEE
+_IESO_OFF                         00003FFD
+_IESO_ON                          00003FFF
+_INTRC_CLKOUT                     00003FFD
+_INTRC_IO                         00003FFC
+_LP_OSC                           00003FEC
+_LVP_OFF                          00003F7F
+_LVP_ON                           00003FFF
+_MCLR_OFF                         00003FDF
+_MCLR_ON                          00003FFF
+_PWRTE_OFF                        00003FFF
+_PWRTE_ON                         00003FF7
+_WDT_OFF                          00003FFB
+_WDT_ON                           00003FFF
+_WRT_PROTECT_2048                 00003BFF
+_WRT_PROTECT_256                  00003DFF
+_WRT_PROTECT_ALL                  000039FF
+_WRT_PROTECT_OFF                  00003FFF
+_XT_OSC                           00003FED
+__16F88                           00000001
+__DEBUG                           1
+array                             00000050
+arraytest                         00000054
+intend                            00000015
+interrupt                         00000004
+receive                           00000093
+skiperror                         0000009A
+transmit                          000000A3
+transmit_loop                     000000A5
+x0                                00000020
+x1                                00000021
+x2                                00000022
+x3                                00000023
+x4                                00000024
+x5                                00000025
+x6                                00000026
+x7                                00000027
+x8                                00000028
+MPASM  5.37                    OPENENDED1.ASM   4-11-2015  14:36:04         PAGE 17
+
+
+SYMBOL TABLE
+  LABEL                             VALUE 
+
+x9                                00000029
+
+
+MEMORY USAGE MAP ('X' = Used,  '-' = Unused)
+
+0000 : X---XXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0040 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX
+0080 : XXXXXXXXXXXXXXXX XXXXXXXXXXXXXXXX XXXXXXXXXXX----- ----------------
+2000 : -------XX------- ---------------- ---------------- ----------------
+
+All other memory blocks unused.
+
+Program Memory Words Used:   168
+Program Memory Words Free:  3928
+
+
+Errors   :     0
+Warnings :     0 reported,     0 suppressed
+Messages :    12 reported,     0 suppressed
+
+
